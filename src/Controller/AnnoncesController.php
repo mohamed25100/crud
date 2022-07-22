@@ -6,6 +6,7 @@ use App\Entity\Annonces;
 use App\Entity\Image;
 use App\Form\AnnoncesType;
 use App\Repository\AnnoncesRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -82,13 +83,41 @@ class AnnoncesController extends AbstractController
     /**
      * @Route("/{id}/edit", name="app_annonces_edit", methods={"GET", "POST"})
      */
-    public function edit(Request $request, Annonces $annonce, AnnoncesRepository $annoncesRepository): Response
+    public function edit(int $id,Request $request, Annonces $annonce, ManagerRegistry $doctrine): Response
     {
+        $entityManager = $doctrine->getManager();
+        $annonce = $entityManager->getRepository(Annonces::class)->find($id);
         $form = $this->createForm(AnnoncesType::class, $annonce);
+        if (!$annonce) {
+            throw $this->createNotFoundException(
+                'No menu found for id '.$id
+            );
+        }
+
+        
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $annoncesRepository->add($annonce, true);
+            
+            //on recupere les images transmises
+            $images = $form->get('images')->getData();
+            //on boucle sur les images
+            foreach($images as $image){
+                //On genere un nouveau nom de fichier
+                $fichier = md5(uniqid()) . '.' . $image->guessExtension();
+
+                //On copie le fichier dans le dossier uploads
+                $image->move(
+                    $this->getParameter('images_directory'),
+                    $fichier
+                );
+                // On stocke l'image dans la base de données (son nom)
+                $img = new Image();
+                $img->setName($fichier);
+                $annonce->addImage($img);
+            }
+            $entityManager->persist($annonce);
+            $entityManager->flush();
 
             return $this->redirectToRoute('app_annonces_index', [], Response::HTTP_SEE_OTHER);
         }
