@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+{% block title %}Accueil{% endblock %}
+{% block body %}
+<!--//si ligne 2 est suprimer le titre va être remplacer par Welcome! (titre de base.html.twig)-->
+
+<div>
+    <h1>Hello {{ controller_name }}! ✅</h1>    
+    <div>This friendly message is coming from: me (do not click here)</div>
+</div>
+<script>document.body.addEventListener('click', () => { location.href = "/annonces"; })</script>
+
+
+{% endblock %}
