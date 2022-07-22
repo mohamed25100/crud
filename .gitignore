@@ -10,7 +10,6 @@
 /public/image/
 /public/images/
 /public/uploads/
-/public/upload/
 ###< symfony/framework-bundle ###
 
 ###> phpunit/phpunit ###
